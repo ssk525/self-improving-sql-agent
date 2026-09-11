@@ -1,0 +1,13 @@
+.venv/
+venv/
+__pycache__/
+*.pyc
+.env
+.DS_Store
+.pytest_cache/
+data/store.db
+data/playbook.db
+data/memory.db
+*.db
+STUDY_GUIDE.md
+LEARNING.md
