@@ -45,7 +45,8 @@ def score_split(items: list[dict], mode: str) -> dict:
     correct = 0
     retries = 0
     details = []
-    for item in items:
+    for i, item in enumerate(items, start=1):
+        print(f"[{mode}] {i}/{len(items)} id={item['id']}", flush=True)
         state = run_question(item["question"], mode=mode)
         retries += int(state.get("retries") or 0)
         gold = result_multiset(item["gold_sql"])
@@ -95,10 +96,12 @@ def render(results: dict, note: str) -> str:
 
 
 def main() -> None:
+    print("Starting eval…", flush=True)
     init_database()
     questions = load_questions()
     holdout = [q for q in questions if q["split"] == "holdout"]
     learn = [q for q in questions if q["split"] == "learn"]
+    print(f"holdout={len(holdout)} learn={len(learn)}", flush=True)
 
     if get_llm() is None:
         note = (
@@ -115,19 +118,30 @@ def main() -> None:
         return
 
     playbook.reset()
+    print("Scoring mode A…", flush=True)
     a = score_split(holdout, "A")
+    print(f"A done EX%={a['ex']}", flush=True)
+    print("Scoring mode B…", flush=True)
     b = score_split(holdout, "B")
+    print(f"B done EX%={b['ex']}", flush=True)
     playbook.reset()
-    for item in learn:
+    print("Growing playbook on learn set…", flush=True)
+    for i, item in enumerate(learn, start=1):
+        print(f"[learn/C] {i}/{len(learn)} id={item['id']}", flush=True)
         run_question(item["question"], mode="C")
+    print("Scoring mode C holdout…", flush=True)
     c = score_split(holdout, "C")
+    print(f"C done EX%={c['ex']}", flush=True)
     payload = {"A": a, "B": b, "C": c}
-    note = "Numbers from `make eval` on the frozen holdout split."
+    note = (
+        "Numbers from `make eval` on the frozen holdout split "
+        f"(model via local Ollama / configured LLM)."
+    )
     RESULTS.write_text(render(payload, note), encoding="utf-8")
-    print(render(payload, note))
+    print(render(payload, note), flush=True)
     failed_c = [d for d in c["details"] if not d["ok"]]
     if failed_c:
-        print("Mode C misses:", [d["id"] for d in failed_c])
+        print("Mode C misses:", [d["id"] for d in failed_c], flush=True)
 
 
 if __name__ == "__main__":
