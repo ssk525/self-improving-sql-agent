@@ -23,7 +23,7 @@ Most Text-to-SQL demos stop at “LLM wrote a query.” Production systems need:
 3. **Memory** — don’t re-learn the same join mistake every session
 4. **Measurement** — frozen holdout EX%, not cherry-picked screenshots
 
-This repo is scoped to those four.
+This repo is scoped to those four. GitHub Actions runs Pytest on Python 3.11 and 3.12, including a PostgreSQL 16 job that sets `statement_timeout`.
 
 ---
 
